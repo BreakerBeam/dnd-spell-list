@@ -1,16 +1,17 @@
 import React, {Component} from 'react';
 import SpellSearch from './SpellSearch.jsx';
+import SpellList from './SpellList.jsx';
 
 class App extends Component {
   constructor() {
     super();
     this.state = {
       characters: [],
-      spellList: [],
-      spellSearch: {name:'fireball'},
       currentChar: '',
+      spellList: [],
       createField: '',
       spellField: '',
+      spellSearch: {},
     };
     this.loadChar = this.loadChar.bind(this);
     this.updateCreateField = this.updateCreateField.bind(this);
@@ -18,6 +19,8 @@ class App extends Component {
     this.createChar = this.createChar.bind(this);
     this.getChars = this.getChars.bind(this);
     this.searchSpell = this.searchSpell.bind(this);
+    this.addSpell = this.addSpell.bind(this);
+    this.deleteSpell = this.deleteSpell.bind(this);
     }
   
   componentDidMount() {
@@ -52,7 +55,7 @@ class App extends Component {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({state:this.state.createField}),
+        body: JSON.stringify({name:this.state.createField}),
       })
       .then(response => response.json())
       .then(data => {
@@ -62,6 +65,7 @@ class App extends Component {
         console.log('Error:', error);
       });
     this.getChars();
+    this.loadChar(this.state.createField);
     this.setState({
         createField: '',
       });
@@ -72,6 +76,13 @@ class App extends Component {
     this.setState({
       currentChar: char,
     });
+    fetch(`/updatespells/${char}`)
+    .then(response => response.json())
+    .then(data => {
+      this.setState({
+        spellList: data,
+      });
+    });
   }
 
   deleteChar(char) {
@@ -80,7 +91,7 @@ class App extends Component {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({state:char}),
+        body: JSON.stringify({name:char}),
       })
       .then(response => response.json())
       .then(data => {
@@ -89,21 +100,73 @@ class App extends Component {
       .catch((error) => {
         console.log('Error:', error);
       });
-    this.getChars();  
+    this.getChars();
+    if(this.state.currentChar === char) this.loadChar(''); 
   }
 
-  searchSpell() {
-    console.log(this.state.spellField);
-    //fetch not working, need to make state lowercase,nospaces,slashes
-    const fetchURL = `https://www.dnd5eapi.co/api/spells/${this.state.spellField}`
+  searchSpell(event) {
+    const endUrl = this.state.spellField.replace(/[ \/]/g,'-').toLowerCase()
+    const fetchURL = `https://www.dnd5eapi.co/api/spells/${endUrl}`
     fetch(fetchURL)
       .then(response => response.json())
       .then(data => {
+        console.log(data);
         this.setState({
           spellSearch: data,
           spellField: '',
         });
     });
+    event.preventDefault();
+  }
+
+  addSpell() {
+    const newList = this.state.spellList;
+    newList.push(this.state.spellSearch);
+    this.setState({
+      spellList: newList,
+    }) 
+    fetch('/updatespells', {
+      method: 'PUT', 
+      headers: {
+        'Content-Type': 'application/json',
+        },
+      body: JSON.stringify({name:this.state.currentChar,spells:newList}),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.log('Error:', error);
+      });
+    this.setState({
+      spellField: '',
+      spellSearch: {},
+    })
+  }
+
+  deleteSpell(spell) {
+    const newList = [];
+    this.state.spellList.forEach( ele => {
+      if(ele.index !== spell) newList.push(ele);
+    })
+    this.setState({
+      spellList: newList,
+    }) 
+    fetch('/updatespells', {
+      method: 'PUT', 
+      headers: {
+        'Content-Type': 'application/json',
+        },
+      body: JSON.stringify({name:this.state.currentChar,spells:newList}),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.log('Error:', error);
+      });
   }
 
   render() {
@@ -113,6 +176,13 @@ class App extends Component {
         characterList.push(<p key={i} onClick={() => this.loadChar(char)}>{char}</p>)
         deleteList.push(<p key={`d${i}`} onClick={() => this.deleteChar(char)}>{char}</p>)
     })
+    let loaded = <div></div>;
+    if(this.state.currentChar !== '') loaded = 
+      <div>
+      <SpellSearch spellField={this.state.spellField} spellSearch={this.state.spellSearch} updateSpellField={this.updateSpellField} searchSpell={this.searchSpell} addSpell={this.addSpell}/>
+      <br/>
+      <SpellList spellList={this.state.spellList} name={this.state.currentChar} deleteSpell={this.deleteSpell}/>
+      </div>
     return (
       <div>
         <div className="dropdown">
@@ -129,12 +199,12 @@ class App extends Component {
         </div>
         <form onSubmit={this.createChar}>
           <label>
-            Create New Character:
+            Create New Character: 
             <input type="text" value={this.state.createField} onChange={this.updateCreateField} />
           </label>
           <input type="submit" value="Submit" />
         </form>
-        <SpellSearch spellField={this.state.spellField} spellSearch={this.state.spellSearch} updateSpellField={this.updateSpellField} searchSpell={this.searchSpell}/>
+        {loaded}
       </div>
     );
   }

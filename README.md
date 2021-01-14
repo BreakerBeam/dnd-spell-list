@@ -18,7 +18,9 @@ Storing everything in a database
 
 6. What are the stretch goals?
 Adding a refined search function for spells (search for a piece of a string in the name or displaying certain spells by class, level or school of magic) 
-Adding other things to the character that one may find useful (character details, notes sections etc…) 
+Adding other things to the character that one may find useful (character details, dice roller, notes sections etc…) 
 Adding a function that allows you to create your own spells and add them to the database or your character (since the API I found only has spells from the player’s handbook and not from expanded content.) 
 Being able to sort/search through your own spell list as well as pick and choose what details of your spells that are displayed
-Adding a dice roller
+Ability for users to sign in and store characters instead of storing characters globally
+Moving the database to the cloud instead of storing it in local mongo db
+Hosting the app online

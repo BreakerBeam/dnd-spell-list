@@ -7,16 +7,6 @@ const mongoose = require('mongoose');
 const mongoURI = 'mongodb://localhost/dndspelllist';
 mongoose.connect(mongoURI);
 
-// const leaderList = [
-//   { name: 'Anna', id: 'a0' },
-//   { name: 'Ben', id: 'b0' },
-//   { name: 'Clara', id: 'c0' },
-//   { name: 'David', id: 'd0' },
-// ];
-
-// app.get('/api/leaders', (req, res) => {
-//   return res.status(200).send(leaderList);
-// });
 app.use(express.json());
 
 app.get('/character', characterController.getCharacters, (req, res) => {
@@ -29,6 +19,14 @@ app.post('/character', characterController.addCharacter, (req, res) => {
 
 app.delete('/character', characterController.deleteCharacter, (req, res) => {
   return res.status(200).json(res.locals.deleted)
+})
+
+app.get('/updatespells/:charName', characterController.loadSpells, (req, res) => {
+  return res.status(200).json([...res.locals.list])
+})
+
+app.put('/updatespells', characterController.updateSpellList, (req, res) => {
+  return res.status(200).json([...res.locals.oldList])
 })
 
 if (process.env.NODE_ENV === 'production') {

@@ -37,6 +37,7 @@ module.exports = {
     publicPath: '/build/',
     proxy: {
       '/character': 'http://localhost:3000',
+      '/updatespells': 'http://localhost:3000',
     },
   },
 };
